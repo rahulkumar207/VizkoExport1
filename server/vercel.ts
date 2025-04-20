@@ -18,7 +18,13 @@ app.get('/api/test', (req, res) => {
 });
 
 // Serve static files
-const distPath = path.resolve(process.cwd(), 'public');
+// First try the production build directory
+let distPath = path.resolve(process.cwd(), 'public');
+// If production build doesn't exist, use the development directory
+if (!fs.existsSync(distPath)) {
+  distPath = path.resolve(process.cwd(), 'client/public');
+}
+
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
 
