@@ -1,4 +1,4 @@
-import express, { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import fs from 'fs';
 
@@ -17,16 +17,21 @@ app.get('/api/vercel-test', (req, res) => {
 const distPath = path.resolve(process.cwd(), 'public');
 if (fs.existsSync(distPath)) {
   app.use(express.static(distPath));
-  
+
   // Fall through to index.html
   app.get('*', (req, res) => {
     res.sendFile(path.resolve(distPath, 'index.html'));
   });
 } else {
   app.get('*', (req, res) => {
-    res.json({ error: 'Build directory not found. Please build the client first.' });
+    res.status(500).json({ error: 'Build directory not found. Please build the client first.' });
   });
 }
+
+// Catch-all route for unmatched requests
+app.use('*', (req, res) => {
+  res.status(404).json({ error: 'Route not found' });
+});
 
 // Error handler
 app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
