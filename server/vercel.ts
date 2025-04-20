@@ -13,6 +13,10 @@ app.get('/api/vercel-test', (req, res) => {
   res.json({ message: 'Vercel API is working' });
 });
 
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'API is working' });
+});
+
 // Serve static files
 const distPath = path.resolve(process.cwd(), 'public');
 if (fs.existsSync(distPath)) {
@@ -34,7 +38,7 @@ app.use('*', (req, res) => {
 });
 
 // Error handler
-app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Server error:', err);
   res.status(500).json({ error: 'Internal Server Error' });
 });
