@@ -34,24 +34,63 @@ app.use((req, res, next) => {
   next();
 });
 
-(async () => {
-  await registerRoutes(app);
-
-  app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-    const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
-
-    res.status(status).json({ message });
-    throw err;
+// Initialize routes - wrap in a try/catch to prevent unhandled promise rejections
+try {
+  // Use a synchronous approach for Vercel
+  registerRoutes(app).catch(err => {
+    console.error("Failed to register routes:", err);
   });
+} catch (error) {
+  console.error("Error during route registration:", error);
+}
 
-  if (app.get("env") === "development") {
-    const server = app.listen(3000); // Replace 3000 with your desired port if needed
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
+// Add a simple health check route
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Error handler middleware
+app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
+  const status = err.status || err.statusCode || 500;
+  const message = err.message || "Internal Server Error";
+  
+  console.error("Server error:", err);
+  
+  // Only send response if it hasn't been sent already
+  if (!res.headersSent) {
+    res.status(status).json({ message });
   }
-})();
+});
+
+// Setup for development or production
+if (process.env.NODE_ENV === "development") {
+  const server = app.listen(3000, () => {
+    console.log("Development server running on port 3000");
+  });
+  
+  setupVite(app, server).catch(err => {
+    console.error("Failed to setup Vite:", err);
+  });
+} else {
+  // For production (Vercel)
+  try {
+    // Check if we're in a Vercel environment
+    if (process.env.VERCEL) {
+      console.log("Running in Vercel environment");
+    }
+    serveStatic(app);
+  } catch (error) {
+    console.error("Error setting up static serving:", error);
+  }
+}
+
+// For local development
+if (!process.env.VERCEL && process.env.NODE_ENV === "production") {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Production server running on port ${PORT}`);
+  });
+}
 
 // Export the app for Vercel
 export default app;

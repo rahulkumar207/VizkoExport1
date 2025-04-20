@@ -2,14 +2,33 @@
   "version": 2,
   "builds": [
     {
-      "src": "server/index.ts",
+      "src": "api/index.ts",
       "use": "@vercel/node"
+    },
+    {
+      "src": "server/vercel.ts",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "public"
+      }
     }
   ],
   "routes": [
     {
+      "src": "/api/health",
+      "dest": "api/index.ts"
+    },
+    {
+      "src": "/api/vercel-test",
+      "dest": "server/vercel.ts"
+    },
+    {
       "src": "/(.*)",
-      "dest": "server/index.ts"
+      "dest": "server/vercel.ts"
     }
   ]
 }

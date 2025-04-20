@@ -22,26 +22,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Contact form submission:", formData);
       
       // Return success response
-      res.status(200).json({ 
+      return res.status(200).json({ 
         success: true, 
         message: "Contact form submitted successfully" 
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
         // Return validation errors
-        res.status(400).json({ 
+        return res.status(400).json({ 
           success: false, 
           message: "Validation error", 
           errors: error.errors 
         });
       } else {
+        console.error("Contact form error:", error);
         // Return generic error
-        res.status(500).json({ 
+        return res.status(500).json({ 
           success: false, 
           message: "An error occurred while processing your request" 
         });
       }
     }
+  });
+
+  // Add a test route to verify API functionality
+  app.get("/api/test", (req, res) => {
+    return res.status(200).json({ message: "API is working" });
   });
 
   const httpServer = createServer(app);
